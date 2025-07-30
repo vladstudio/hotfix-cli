@@ -188,7 +188,5 @@ class HotfixCLI {
 }
 
 // Main execution
-if (require.main === module) {
-	const cli = new HotfixCLI();
-	cli.run();
-}
+const cli = new HotfixCLI();
+cli.run();
