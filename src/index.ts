@@ -91,8 +91,20 @@ class HotfixCLI {
 		this.executeCommand("git add .");
 
 		// Generate commit message
-		const timestamp = new Date().toLocaleString();
-		const commitMessage = `Hotfix: automated fix (${timestamp})`;
+		let commitMessage: string;
+		try {
+			// Try to use commitologist for smart commit message
+			commitMessage = this.executeCommand("commitologist").trim();
+			if (!commitMessage) {
+				throw new Error("Empty commit message from commitologist");
+			}
+			console.log("📝 Using smart commit message from commitologist");
+		} catch {
+			// Fall back to default message if commitologist fails or is not available
+			const timestamp = new Date().toLocaleString();
+			commitMessage = `Hotfix: automated fix (${timestamp})`;
+			console.log("📝 Using fallback commit message");
+		}
 
 		// Commit changes
 		this.executeCommand(`git commit -m "${commitMessage}"`);
