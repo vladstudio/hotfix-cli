@@ -22,13 +22,13 @@ Automated hotfix workflow tool that handles the entire process from commit to me
 
 ### Global Installation
 ```bash
-bun install -g .
+npm install -g .
 ```
 
 ### Local Installation
 ```bash
-bun install
-bun run build
+npm install
+npm run build
 # Use ./bin/hotfix directly
 ```
 
@@ -64,11 +64,11 @@ Current state (main) → Create branch → Commit → Push → Create PR → Mer
 
 ```bash
 # Install dependencies
-bun install
+npm install
 
 # Build
-bun run build
+npm run build
 
 # Run in development mode
-bun run dev
+npm run dev
 ```
