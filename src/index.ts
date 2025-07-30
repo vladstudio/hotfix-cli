@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { execSync } from "child_process";
+import * as readline from "readline";
 
 class HotfixCLI {
 	private branchName: string = "";
@@ -134,11 +135,27 @@ class HotfixCLI {
 		// Wait a moment for PR to be fully created
 		await this.sleep(1000);
 
-		// Merge and delete remote branch
-		this.executeCommand(
-			`gh pr merge ${this.branchName} --merge --delete-branch --auto`,
-		);
-		console.log("✅ Pull request merged and remote branch deleted");
+		try {
+			// Try automatic merge first
+			this.executeCommand(
+				`gh pr merge ${this.branchName} --merge --delete-branch --auto`,
+			);
+			console.log("✅ Pull request merged and remote branch deleted");
+		} catch (error) {
+			console.log("⚠️ Automatic merge failed. Opening pull request for manual merge...");
+			
+			// Open the PR in browser
+			this.executeCommand(`gh pr view ${this.branchName} --web`);
+			
+			// Wait for user input
+			console.log("📝 Please merge the pull request manually in your browser.");
+			console.log("⌨️ Press Enter after you have merged the pull request to continue...");
+			
+			// Wait for user to press Enter
+			await this.waitForUserInput();
+			
+			console.log("✅ Manual merge completed, continuing with cleanup...");
+		}
 	}
 
 	private async cleanup(): Promise<void> {
@@ -201,6 +218,20 @@ class HotfixCLI {
 
 	private sleep(ms: number): Promise<void> {
 		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
+
+	private waitForUserInput(): Promise<void> {
+		return new Promise((resolve) => {
+			const rl = readline.createInterface({
+				input: process.stdin,
+				output: process.stdout,
+			});
+
+			rl.question("", () => {
+				rl.close();
+				resolve();
+			});
+		});
 	}
 }
 
