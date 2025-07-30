@@ -2,6 +2,9 @@
 
 import { execSync } from "child_process";
 import * as readline from "readline";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
 class HotfixCLI {
 	private branchName: string = "";
@@ -13,6 +16,7 @@ class HotfixCLI {
 			console.log("🚀 Starting automated hotfix workflow...");
 
 			await this.validateEnvironment();
+			await this.generateCommitMessage();
 			await this.generateBranchName();
 			await this.createAndSwitchBranch();
 			await this.commitChanges();
@@ -70,6 +74,39 @@ class HotfixCLI {
 		console.log("✅ Environment validation passed");
 	}
 
+	private async generateCommitMessage(): Promise<void> {
+		console.log("📝 Generating commit message...");
+
+		try {
+			this.commitMessage = this.executeCommand("commitologist").trim();
+			if (!this.commitMessage) {
+				throw new Error("Empty commit message from commitologist");
+			}
+			console.log("✅ Generated smart commit message from commitologist");
+		} catch {
+			const timestamp = new Date().toLocaleString();
+			this.commitMessage = `Hotfix: automated fix (${timestamp})`;
+			console.log("✅ Using fallback commit message");
+		}
+
+		const rl = readline.createInterface({
+			input: process.stdin,
+			output: process.stdout,
+		});
+
+		try {
+			const editedMessage = await new Promise<string>((resolve) => {
+				rl.question(`📝 Commit message: ${this.commitMessage}\n✏️ Edit if needed (or press Enter to continue): `, (answer) => {
+					resolve(answer.trim() || this.commitMessage);
+				});
+			});
+			this.commitMessage = editedMessage;
+			console.log(`✅ Final commit message: "${this.commitMessage}"`);
+		} finally {
+			rl.close();
+		}
+	}
+
 	private async generateBranchName(): Promise<void> {
 		const timestamp = new Date()
 			.toISOString()
@@ -89,27 +126,9 @@ class HotfixCLI {
 	private async commitChanges(): Promise<void> {
 		console.log("📦 Staging and committing changes...");
 
-		// Stage all changes
 		this.executeCommand("git add .");
-
-		// Generate commit message
-		try {
-			// Try to use commitologist for smart commit message
-			this.commitMessage = this.executeCommand("commitologist").trim();
-			if (!this.commitMessage) {
-				throw new Error("Empty commit message from commitologist");
-			}
-			console.log("📝 Using smart commit message from commitologist");
-		} catch {
-			// Fall back to default message if commitologist fails or is not available
-			const timestamp = new Date().toLocaleString();
-			this.commitMessage = `Hotfix: automated fix (${timestamp})`;
-			console.log("📝 Using fallback commit message");
-		}
-
-		// Commit changes
 		this.executeCommand(`git commit -m "${this.commitMessage}"`);
-		console.log(`✅ Changes committed with message: "${this.commitMessage}"`);
+		console.log(`✅ Changes committed`);
 	}
 
 	private async pushBranch(): Promise<void> {
@@ -120,7 +139,7 @@ class HotfixCLI {
 	private async createPR(): Promise<void> {
 		console.log("🔄 Creating pull request...");
 
-		const title = this.commitMessage;
+		const title = this.commitMessage.length > 70 ? this.commitMessage.substring(0, 70) : this.commitMessage;
 		const body = `Automated hotfix created at ${new Date().toLocaleString()}`;
 
 		this.executeCommand(
@@ -233,6 +252,26 @@ class HotfixCLI {
 			});
 		});
 	}
+}
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+
+if (args.includes('--help') || args.includes('-h')) {
+	console.log('hotfix - Automated hotfix workflow for GitHub');
+	console.log('Creates branch, commits changes, creates PR, and merges automatically');
+	process.exit(0);
+}
+
+if (args.includes('--version') || args.includes('-v')) {
+	try {
+		const packagePath = join(dirname(__filename), '..', 'package.json');
+		const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
+		console.log(packageJson.version);
+	} catch {
+		console.log('1.0.3');
+	}
+	process.exit(0);
 }
 
 // Main execution
