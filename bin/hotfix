@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+const path = require('path');
+const fs = require('fs');
+
+// Check if we have compiled JS, otherwise use ts-node
+const distPath = path.join(__dirname, '..', 'dist', 'index.js');
+const srcPath = path.join(__dirname, '..', 'src', 'index.ts');
+
+if (fs.existsSync(distPath)) {
+  // Use compiled JavaScript
+  require(distPath);
+} else {
+  // Use ts-node for development
+  require('ts-node/register');
+  require(srcPath);
+}
