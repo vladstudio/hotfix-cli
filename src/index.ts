@@ -138,8 +138,13 @@ class HotfixCLI {
 		// Pull latest changes
 		this.executeCommand("git pull origin main");
 
-		// Delete local branch
-		this.executeCommand(`git branch -D ${this.branchName}`);
+		// Delete local branch if it exists
+		try {
+			this.executeCommand(`git branch -D ${this.branchName}`);
+			console.log(`✅ Local branch ${this.branchName} deleted`);
+		} catch (error) {
+			console.log(`ℹ️ Local branch ${this.branchName} already deleted or not found`);
+		}
 
 		console.log("✅ Cleanup completed");
 	}
