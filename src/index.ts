@@ -6,6 +6,7 @@ import * as readline from "readline";
 class HotfixCLI {
 	private branchName: string = "";
 	private originalBranch: string = "";
+	private commitMessage: string = "";
 
 	async run(): Promise<void> {
 		try {
@@ -92,24 +93,23 @@ class HotfixCLI {
 		this.executeCommand("git add .");
 
 		// Generate commit message
-		let commitMessage: string;
 		try {
 			// Try to use commitologist for smart commit message
-			commitMessage = this.executeCommand("commitologist").trim();
-			if (!commitMessage) {
+			this.commitMessage = this.executeCommand("commitologist").trim();
+			if (!this.commitMessage) {
 				throw new Error("Empty commit message from commitologist");
 			}
 			console.log("📝 Using smart commit message from commitologist");
 		} catch {
 			// Fall back to default message if commitologist fails or is not available
 			const timestamp = new Date().toLocaleString();
-			commitMessage = `Hotfix: automated fix (${timestamp})`;
+			this.commitMessage = `Hotfix: automated fix (${timestamp})`;
 			console.log("📝 Using fallback commit message");
 		}
 
 		// Commit changes
-		this.executeCommand(`git commit -m "${commitMessage}"`);
-		console.log(`✅ Changes committed with message: "${commitMessage}"`);
+		this.executeCommand(`git commit -m "${this.commitMessage}"`);
+		console.log(`✅ Changes committed with message: "${this.commitMessage}"`);
 	}
 
 	private async pushBranch(): Promise<void> {
@@ -120,7 +120,7 @@ class HotfixCLI {
 	private async createPR(): Promise<void> {
 		console.log("🔄 Creating pull request...");
 
-		const title = `Hotfix: ${new Date().toLocaleDateString()}`;
+		const title = this.commitMessage;
 		const body = `Automated hotfix created at ${new Date().toLocaleString()}`;
 
 		this.executeCommand(
