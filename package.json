@@ -1,6 +1,6 @@
 {
   "name": "hotfix-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Automated hotfix workflow CLI tool",
   "main": "dist/index.js",
   "bin": {
@@ -21,9 +21,9 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "ts-node": "^10.9.0"
+    "@types/node": "^24.1.0",
+    "typescript": "^5.8.3",
+    "ts-node": "^10.9.2"
   },
   "dependencies": {},
   "engines": {
