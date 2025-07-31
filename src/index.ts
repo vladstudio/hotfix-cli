@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-import { execSync } from "child_process";
-import * as readline from "readline";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import * as readline from "node:readline";
 
 class HotfixCLI {
 	private branchName: string = "";
@@ -160,7 +159,7 @@ class HotfixCLI {
 				`gh pr merge ${this.branchName} --merge --delete-branch --auto`,
 			);
 			console.log("✅ Pull request merged and remote branch deleted");
-		} catch (error) {
+		} catch {
 			console.log("⚠️ Automatic merge failed. Opening pull request for manual merge...");
 			
 			// Open the PR in browser
@@ -190,7 +189,7 @@ class HotfixCLI {
 		try {
 			this.executeCommand(`git branch -D ${this.branchName}`);
 			console.log(`✅ Local branch ${this.branchName} deleted`);
-		} catch (error) {
+		} catch {
 			console.log(`ℹ️ Local branch ${this.branchName} already deleted or not found`);
 		}
 
@@ -230,8 +229,9 @@ class HotfixCLI {
 				encoding: "utf8",
 				stdio: ["pipe", "pipe", "pipe"],
 			});
-		} catch (error: any) {
-			throw new Error(`Command failed: ${command}\n${error.message}`);
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			throw new Error(`Command failed: ${command}\n${message}`);
 		}
 	}
 
