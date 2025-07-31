@@ -95,9 +95,12 @@ class HotfixCLI {
 
 		try {
 			const editedMessage = await new Promise<string>((resolve) => {
-				rl.question(`📝 Commit message: ${this.commitMessage}\n✏️ Edit if needed (or press Enter to continue): `, (answer) => {
-					resolve(answer.trim() || this.commitMessage);
-				});
+				rl.question(
+					`📝 Commit message: "${this.commitMessage}"\n   Edit if needed (or press Enter to continue): `,
+					(answer) => {
+						resolve(answer.trim() || this.commitMessage);
+					},
+				);
 			});
 			this.commitMessage = editedMessage;
 			console.log(`✅ Final commit message: "${this.commitMessage}"`);
@@ -115,6 +118,26 @@ class HotfixCLI {
 
 		this.branchName = `hotfix-${timestamp}`;
 		console.log(`📝 Generated branch name: ${this.branchName}`);
+
+		const rl = readline.createInterface({
+			input: process.stdin,
+			output: process.stdout,
+		});
+
+		try {
+			const editedBranchName = await new Promise<string>((resolve) => {
+				rl.question(
+					`🌿 Branch name: "${this.branchName}"\n   Edit if needed (or press Enter to continue): `,
+					(answer) => {
+						resolve(answer.trim() || this.branchName);
+					},
+				);
+			});
+			this.branchName = editedBranchName;
+			console.log(`✅ Final branch name: "${this.branchName}"`);
+		} finally {
+			rl.close();
+		}
 	}
 
 	private async createAndSwitchBranch(): Promise<void> {
@@ -138,7 +161,10 @@ class HotfixCLI {
 	private async createPR(): Promise<void> {
 		console.log("🔄 Creating pull request...");
 
-		const title = this.commitMessage.length > 70 ? this.commitMessage.substring(0, 70) : this.commitMessage;
+		const title =
+			this.commitMessage.length > 70
+				? this.commitMessage.substring(0, 70)
+				: this.commitMessage;
 		const body = `Automated hotfix created at ${new Date().toLocaleString()}`;
 
 		this.executeCommand(
@@ -160,18 +186,22 @@ class HotfixCLI {
 			);
 			console.log("✅ Pull request merged and remote branch deleted");
 		} catch {
-			console.log("⚠️ Automatic merge failed. Opening pull request for manual merge...");
-			
+			console.log(
+				"⚠️ Automatic merge failed. Opening pull request for manual merge...",
+			);
+
 			// Open the PR in browser
 			this.executeCommand(`gh pr view ${this.branchName} --web`);
-			
+
 			// Wait for user input
 			console.log("📝 Please merge the pull request manually in your browser.");
-			console.log("⌨️ Press Enter after you have merged the pull request to continue...");
-			
+			console.log(
+				"⌨️ Press Enter after you have merged the pull request to continue...",
+			);
+
 			// Wait for user to press Enter
 			await this.waitForUserInput();
-			
+
 			console.log("✅ Manual merge completed, continuing with cleanup...");
 		}
 	}
@@ -190,7 +220,9 @@ class HotfixCLI {
 			this.executeCommand(`git branch -D ${this.branchName}`);
 			console.log(`✅ Local branch ${this.branchName} deleted`);
 		} catch {
-			console.log(`ℹ️ Local branch ${this.branchName} already deleted or not found`);
+			console.log(
+				`ℹ️ Local branch ${this.branchName} already deleted or not found`,
+			);
 		}
 
 		console.log("✅ Cleanup completed");
@@ -257,19 +289,21 @@ class HotfixCLI {
 // Parse command line arguments
 const args = process.argv.slice(2);
 
-if (args.includes('--help') || args.includes('-h')) {
-	console.log('hotfix - Automated hotfix workflow for GitHub');
-	console.log('Creates branch, commits changes, creates PR, and merges automatically');
+if (args.includes("--help") || args.includes("-h")) {
+	console.log("hotfix - Automated hotfix workflow for GitHub");
+	console.log(
+		"Creates branch, commits changes, creates PR, and merges automatically",
+	);
 	process.exit(0);
 }
 
-if (args.includes('--version') || args.includes('-v')) {
+if (args.includes("--version") || args.includes("-v")) {
 	try {
-		const packagePath = join(dirname(__filename), '..', 'package.json');
-		const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
+		const packagePath = join(dirname(__filename), "..", "package.json");
+		const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 		console.log(packageJson.version);
 	} catch {
-		console.log('1.0.3');
+		console.log("1.0.3");
 	}
 	process.exit(0);
 }
