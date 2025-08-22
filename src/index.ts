@@ -212,7 +212,8 @@ class HotfixCLI {
 		// Switch back to main
 		this.executeCommand("git checkout main");
 
-		// Pull latest changes
+		// Fetch from all remotes and pull latest changes
+		this.executeCommand("git fetch --all");
 		this.executeCommand("git pull origin main");
 
 		// Delete local branch if it exists
